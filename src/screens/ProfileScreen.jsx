@@ -1,51 +1,88 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
 
 /*
   ProfileScreen
   Fungsi:
-  - Menampilkan informasi tentang aplikasi KANA
-  - Menjelaskan tujuan dan fitur katalog
+  - Menampilkan identitas pengguna
+  - Menampilkan koleksi alat musik favorit
 */
 
 const ProfileScreen = () => {
   return (
     <ScrollView style={styles.container}>
 
-      {/* Header */}
-      <View style={styles.headerBox}>
-        <Text style={styles.title}>Tentang KANA 🎶</Text>
+      {/* Header Profile */}
+      <View style={styles.profileBox}>
 
-        <Text style={styles.subtitle}>
-          Katalog Alat Musik Nusantara
+        {/* Avatar */}
+        <Image
+          source={{
+            uri: "https://i.pravatar.cc/150?img=12"
+          }}
+          style={styles.avatar}
+        />
+
+        {/* Nama */}
+        <Text style={styles.name}>
+          Christobell Dillon
+        </Text>
+
+        {/* Username */}
+        <Text style={styles.username}>
+          @nusantara.music
+        </Text>
+
+        {/* Bio */}
+        <Text style={styles.bio}>
+          Pecinta alat musik tradisional dan kolektor
+          musik nusantara 🎶
+        </Text>
+
+      </View>
+
+      {/* Statistik */}
+      <View style={styles.statsContainer}>
+
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>3</Text>
+          <Text style={styles.statText}>Koleksi</Text>
+        </View>
+
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>5</Text>
+          <Text style={styles.statText}>Kategori</Text>
+        </View>
+
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>3</Text>
+          <Text style={styles.statText}>Daerah</Text>
+        </View>
+
+      </View>
+
+      {/* Koleksi Favorit */}
+      <Text style={styles.sectionTitle}>
+        ❤️ Koleksi Saya
+      </Text>
+
+      <View style={styles.collectionCard}>
+        <Text style={styles.instrumentName}>
+          Angklung
+        </Text>
+
+        <Text style={styles.instrumentDesc}>
+          Alat musik bambu khas Jawa Barat
         </Text>
       </View>
 
-      {/* Deskripsi aplikasi */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Deskripsi Aplikasi</Text>
-
-        <Text style={styles.text}>
-          KANA adalah aplikasi katalog digital yang bertujuan
-          memperkenalkan berbagai alat musik tradisional Indonesia
-          berdasarkan asal daerah dan cara memainkannya.
+      <View style={styles.collectionCard}>
+        <Text style={styles.instrumentName}>
+          Sasando
         </Text>
-      </View>
 
-      {/* Fitur aplikasi */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Fitur Aplikasi</Text>
-
-        <Text style={styles.list}>• Katalog alat musik nusantara</Text>
-        <Text style={styles.list}>• Pencarian alat musik</Text>
-        <Text style={styles.list}>• Eksplorasi kategori alat musik</Text>
-        <Text style={styles.list}>• Informasi asal daerah alat musik</Text>
-      </View>
-
-      {/* Quote */}
-      <View style={styles.quoteBox}>
-        <Text style={styles.quote}>
-          “Melestarikan budaya Indonesia melalui teknologi digital.”
+        <Text style={styles.instrumentDesc}>
+          Alat musik petik dari NTT
         </Text>
       </View>
 
@@ -64,61 +101,88 @@ const styles = StyleSheet.create({
     padding: 16
   },
 
-  headerBox: {
+  profileBox: {
     backgroundColor: "#350a50",
     padding: 25,
     borderRadius: 22,
+    alignItems: "center",
     marginBottom: 20
   },
 
-  title: {
-    fontSize: 28,
+  avatar: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    marginBottom: 12,
+    borderWidth: 3,
+    borderColor: "#FFD700"
+  },
+
+  name: {
+    fontSize: 22,
     fontWeight: "bold",
     color: "#FFD700"
   },
 
-  subtitle: {
-    color: "#eee",
-    marginTop: 5
+  username: {
+    color: "#ddd",
+    marginTop: 4
   },
 
-  card: {
-    backgroundColor: "#fff",
-    padding: 18,
-    borderRadius: 16,
-    marginBottom: 16,
-    elevation: 3
-  },
-
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#350a50"
-  },
-
-  text: {
-    color: "#555",
+  bio: {
+    color: "#fff",
+    textAlign: "center",
+    marginTop: 12,
     lineHeight: 22
   },
 
-  list: {
-    color: "#555",
-    marginBottom: 8
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 25
   },
 
-  quoteBox: {
-    backgroundColor: "#350a50",
-    padding: 20,
-    borderRadius: 18,
-    marginTop: 5,
-    marginBottom: 20
+  statCard: {
+    backgroundColor: "#fff",
+    width: "31%",
+    padding: 15,
+    borderRadius: 16,
+    alignItems: "center",
+    elevation: 3
   },
 
-  quote: {
-    color: "#FFD700",
-    textAlign: "center",
-    fontStyle: "italic",
-    lineHeight: 24
+  statNumber: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#350a50"
+  },
+
+  statText: {
+    color: "gray",
+    marginTop: 5
+  },
+
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 12
+  },
+
+  collectionCard: {
+    backgroundColor: "#fff",
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 15,
+    elevation: 3
+  },
+
+  instrumentName: {
+    fontSize: 18,
+    fontWeight: "bold"
+  },
+
+  instrumentDesc: {
+    color: "gray",
+    marginTop: 5
   }
 });
