@@ -21,10 +21,10 @@ const BottomNavbar = () => {
         tabBarActiveTintColor: "#FFD700",
         tabBarInactiveTintColor: "#aaa",
         tabBarStyle: {
-          backgroundColor: "#350a50",
-          height: 62,
-          paddingBottom: 8,
-          paddingTop: 8
+            backgroundColor: "#350a50",
+            height: 55,
+            paddingBottom: 6,
+            paddingTop: 5
         },
         tabBarIcon: ({ color, size }) => {
           let iconName = "home";

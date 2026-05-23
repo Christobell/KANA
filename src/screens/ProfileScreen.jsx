@@ -1,21 +1,29 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image
+} from "react-native";
+
+import StatsCard from "../components/StatsCard";
+import CollectionCard from "../components/CollectionCard";
 
 /*
   ProfileScreen
   Fungsi:
-  - Menampilkan identitas pengguna
-  - Menampilkan koleksi alat musik favorit
+  - Menampilkan profile pengguna
+  - Menampilkan koleksi favorit
 */
 
 const ProfileScreen = () => {
   return (
     <ScrollView style={styles.container}>
 
-      {/* Header Profile */}
+      {/* Profile Header */}
       <View style={styles.profileBox}>
 
-        {/* Avatar */}
         <Image
           source={{
             uri: "https://i.pravatar.cc/150?img=12"
@@ -23,66 +31,48 @@ const ProfileScreen = () => {
           style={styles.avatar}
         />
 
-        {/* Nama */}
         <Text style={styles.name}>
           Christobell Dillon
         </Text>
 
-        {/* Username */}
         <Text style={styles.username}>
           @nusantara.music
         </Text>
 
-        {/* Bio */}
         <Text style={styles.bio}>
-          Pecinta alat musik tradisional dan kolektor
-          musik nusantara 🎶
+          Pecinta alat musik tradisional dan
+          kolektor budaya nusantara 🎶
         </Text>
 
       </View>
 
       {/* Statistik */}
       <View style={styles.statsContainer}>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>3</Text>
-          <Text style={styles.statText}>Koleksi</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>5</Text>
-          <Text style={styles.statText}>Kategori</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>3</Text>
-          <Text style={styles.statText}>Daerah</Text>
-        </View>
-
+        <StatsCard number="3" label="Koleksi" />
+        <StatsCard number="5" label="Kategori" />
+        <StatsCard number="3" label="Daerah" />
       </View>
 
-      {/* Koleksi Favorit */}
+      {/* Koleksi */}
       <Text style={styles.sectionTitle}>
         ❤️ Koleksi Saya
       </Text>
 
-      <View style={styles.collectionCard}>
-        <Text style={styles.instrumentName}>
-          Angklung
-        </Text>
+      <CollectionCard
+        title="Angklung"
+        desc="Alat musik bambu khas Jawa Barat"
+      />
 
-        <Text style={styles.instrumentDesc}>
-          Alat musik bambu khas Jawa Barat
-        </Text>
-      </View>
+      <CollectionCard
+        title="Sasando"
+        desc="Alat musik petik dari NTT"
+      />
 
-      <View style={styles.collectionCard}>
-        <Text style={styles.instrumentName}>
-          Sasando
-        </Text>
-
-        <Text style={styles.instrumentDesc}>
-          Alat musik petik dari NTT
+      {/* Quote */}
+      <View style={styles.quoteBox}>
+        <Text style={styles.quote}>
+          “Melestarikan budaya Indonesia melalui
+          teknologi digital.”
         </Text>
       </View>
 
@@ -96,93 +86,75 @@ export default ProfileScreen;
 // ================= STYLE =================
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-    padding: 16
-  },
-
+  flex: 1,
+  backgroundColor: "#f5f5f5",
+  paddingHorizontal: 12,
+  paddingBottom: 12,
+  paddingTop: 28
+},
   profileBox: {
     backgroundColor: "#350a50",
-    padding: 25,
-    borderRadius: 22,
+    padding: 18,
+    borderRadius: 18,
     alignItems: "center",
-    marginBottom: 20
+    marginBottom: 16
   },
 
   avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    marginBottom: 12,
+    width: 75,
+    height: 75,
+    borderRadius: 40,
+    marginBottom: 10,
     borderWidth: 3,
     borderColor: "#FFD700"
   },
 
   name: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#FFD700"
   },
 
   username: {
     color: "#ddd",
-    marginTop: 4
+    marginTop: 3,
+    fontSize: 13
   },
 
   bio: {
     color: "#fff",
     textAlign: "center",
-    marginTop: 12,
-    lineHeight: 22
+    marginTop: 10,
+    lineHeight: 20,
+    fontSize: 13
   },
 
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 25
-  },
-
-  statCard: {
-    backgroundColor: "#fff",
-    width: "31%",
-    padding: 15,
-    borderRadius: 16,
-    alignItems: "center",
-    elevation: 3
-  },
-
-  statNumber: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#350a50"
-  },
-
-  statText: {
-    color: "gray",
-    marginTop: 5
+    marginBottom: 18
   },
 
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 12
-  },
-
-  collectionCard: {
-    backgroundColor: "#fff",
-    padding: 18,
-    borderRadius: 16,
-    marginBottom: 15,
-    elevation: 3
-  },
-
-  instrumentName: {
     fontSize: 18,
-    fontWeight: "bold"
+    fontWeight: "bold",
+    marginBottom: 12,
+    color: "#350a50"
   },
 
-  instrumentDesc: {
-    color: "gray",
-    marginTop: 5
+  quoteBox: {
+    backgroundColor: "#350a50",
+    padding: 16,
+    borderRadius: 16,
+    marginTop: 6,
+    marginBottom: 24
+  },
+
+  quote: {
+    color: "#FFD700",
+    textAlign: "center",
+    fontStyle: "italic",
+    lineHeight: 22,
+    fontSize: 13
   }
 });
