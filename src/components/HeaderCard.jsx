@@ -1,15 +1,41 @@
-import React from "react";
-import { View, Text, TextInput, StyleSheet } from "react-native";
-
-/*
-  HeaderCard
-  Fungsi: menampilkan header utama aplikasi
-*/
+import React, { useRef, useCallback } from "react";
+import { Text, TextInput, StyleSheet, Animated } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 const HeaderCard = ({ searchText, setSearchText }) => {
-  return (
-    <View style={styles.header}>
+  const slideAnim = useRef(new Animated.Value(-30)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  useFocusEffect(
+    useCallback(() => {
+      slideAnim.setValue(-30);
+      fadeAnim.setValue(0);
+
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 700,
+          useNativeDriver: true
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 700,
+          useNativeDriver: true
+        })
+      ]).start();
+    }, [])
+  );
+
+  return (
+    <Animated.View
+      style={[
+        styles.header,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }]
+        }
+      ]}
+    >
       <Text style={styles.title}>KANA 🎶</Text>
 
       <Text style={styles.subtitle}>
@@ -23,8 +49,7 @@ const HeaderCard = ({ searchText, setSearchText }) => {
         value={searchText}
         onChangeText={setSearchText}
       />
-
-    </View>
+    </Animated.View>
   );
 };
 

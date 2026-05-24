@@ -1,35 +1,61 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   View,
   Text,
   Image,
   StyleSheet,
-  TouchableOpacity
+  TouchableOpacity,
+  Animated
 } from "react-native";
 
 /*
   InstrumentCard
   Fungsi:
   - Menampilkan card alat musik
-  - Mengirim data alat musik ke halaman Detail saat card ditekan
+  - Menerapkan animasi scale saat card ditekan
+  - Mengirim data alat musik ke DetailScreen
 */
 
 const InstrumentCard = ({ item, navigation }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.96,
+      useNativeDriver: true
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 3,
+      useNativeDriver: true
+    }).start();
+  };
+
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.9}
       onPress={() => navigation.navigate("Detail", { item })}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
     >
-      <View style={styles.card}>
-
+      <Animated.View
+        style={[
+          styles.card,
+          {
+            transform: [{ scale: scaleAnim }]
+          }
+        ]}
+      >
         <Image source={item.image} style={styles.image} />
 
         <View style={styles.info}>
           <Text style={styles.name}>{item.name}</Text>
           <Text style={styles.origin}>{item.origin}</Text>
         </View>
-
-      </View>
+      </Animated.View>
     </TouchableOpacity>
   );
 };
