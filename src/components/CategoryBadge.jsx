@@ -1,16 +1,32 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { Text, StyleSheet, TouchableOpacity } from "react-native";
 
 /*
   CategoryBadge
-  Fungsi: menampilkan badge kategori
+  Fungsi:
+  - Menampilkan kategori alat musik
+  - Bisa ditekan untuk filter data
 */
 
-const CategoryBadge = ({ title }) => {
+const CategoryBadge = ({ title, selected, onPress }) => {
   return (
-    <View style={styles.badge}>
-      <Text style={styles.text}>{title}</Text>
-    </View>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      style={[
+        styles.badge,
+        selected && styles.activeBadge
+      ]}
+    >
+      <Text
+        style={[
+          styles.text,
+          selected && styles.activeText
+        ]}
+      >
+        {title}
+      </Text>
+    </TouchableOpacity>
   );
 };
 
@@ -19,15 +35,24 @@ export default CategoryBadge;
 const styles = StyleSheet.create({
   badge: {
     backgroundColor: "#350a50",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 10,
-    marginBottom: 10
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: 18,
+    marginRight: 8,
+    marginBottom: 8
+  },
+
+  activeBadge: {
+    backgroundColor: "#FFD700"
   },
 
   text: {
     color: "#FFD700",
-    fontWeight: "bold"
+    fontWeight: "bold",
+    fontSize: 13
+  },
+
+  activeText: {
+    color: "#350a50"
   }
 });

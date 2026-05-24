@@ -1,23 +1,36 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity
+} from "react-native";
 
 /*
   InstrumentCard
-  Fungsi: menampilkan card alat musik
+  Fungsi:
+  - Menampilkan card alat musik
+  - Mengirim data alat musik ke halaman Detail saat card ditekan
 */
 
-const InstrumentCard = ({ item }) => {
+const InstrumentCard = ({ item, navigation }) => {
   return (
-    <View style={styles.card}>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() => navigation.navigate("Detail", { item })}
+    >
+      <View style={styles.card}>
 
-      <Image source={item.image} style={styles.image} />
+        <Image source={item.image} style={styles.image} />
 
-      <View style={styles.info}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.origin}>{item.origin}</Text>
+        <View style={styles.info}>
+          <Text style={styles.name}>{item.name}</Text>
+          <Text style={styles.origin}>{item.origin}</Text>
+        </View>
+
       </View>
-
-    </View>
+    </TouchableOpacity>
   );
 };
 
