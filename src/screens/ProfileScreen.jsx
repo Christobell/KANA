@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Image
+  Image,
+  TextInput,
+  TouchableOpacity,
+  Alert
 } from "react-native";
 
 import StatsCard from "../components/StatsCard";
@@ -14,14 +17,31 @@ import CollectionCard from "../components/CollectionCard";
   ProfileScreen
   Fungsi:
   - Menampilkan profile pengguna
-  - Menampilkan koleksi favorit
+  - Mengelola input form profile
 */
 
 const ProfileScreen = () => {
+
+  // STATE INPUT
+  const [name, setName] = useState("Christobell Dillon");
+  const [username, setUsername] = useState("@nusantara.music");
+  const [bio, setBio] = useState(
+    "Pecinta alat musik tradisional Indonesia 🎶"
+  );
+  const [favorite, setFavorite] = useState("Angklung");
+
+  // HANDLE SIMPAN
+  const handleSave = () => {
+    Alert.alert(
+      "Berhasil",
+      "Profil berhasil diperbarui 🎉"
+    );
+  };
+
   return (
     <ScrollView style={styles.container}>
 
-      {/* Profile Header */}
+      {/* HEADER PROFILE */}
       <View style={styles.profileBox}>
 
         <Image
@@ -31,18 +51,73 @@ const ProfileScreen = () => {
           style={styles.avatar}
         />
 
-        <Text style={styles.name}>
-          Christobell Dillon
+        <Text style={styles.title}>
+          Edit Profil
         </Text>
 
-        <Text style={styles.username}>
-          @nusantara.music
+      </View>
+
+      {/* FORM PROFILE */}
+      <View style={styles.formBox}>
+
+        {/* Nama */}
+        <Text style={styles.label}>
+          Nama Lengkap
         </Text>
 
-        <Text style={styles.bio}>
-          Pecinta alat musik tradisional dan
-          kolektor budaya nusantara 🎶
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+          placeholder="Masukkan nama"
+        />
+
+        {/* Username */}
+        <Text style={styles.label}>
+          Username
         </Text>
+
+        <TextInput
+          style={styles.input}
+          value={username}
+          onChangeText={setUsername}
+          placeholder="Masukkan username"
+        />
+
+        {/* Bio */}
+        <Text style={styles.label}>
+          Bio
+        </Text>
+
+        <TextInput
+          style={styles.bioInput}
+          value={bio}
+          onChangeText={setBio}
+          multiline
+          placeholder="Tulis bio singkat"
+        />
+
+        {/* Favorit */}
+        <Text style={styles.label}>
+          Alat Musik Favorit
+        </Text>
+
+        <TextInput
+          style={styles.input}
+          value={favorite}
+          onChangeText={setFavorite}
+          placeholder="Contoh: Angklung"
+        />
+
+        {/* Tombol */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSave}
+        >
+          <Text style={styles.buttonText}>
+            Simpan Profil
+          </Text>
+        </TouchableOpacity>
 
       </View>
 
@@ -68,14 +143,6 @@ const ProfileScreen = () => {
         desc="Alat musik petik dari NTT"
       />
 
-      {/* Quote */}
-      <View style={styles.quoteBox}>
-        <Text style={styles.quote}>
-          “Melestarikan budaya Indonesia melalui
-          teknologi digital.”
-        </Text>
-      </View>
-
     </ScrollView>
   );
 };
@@ -86,12 +153,13 @@ export default ProfileScreen;
 // ================= STYLE =================
 const styles = StyleSheet.create({
   container: {
-  flex: 1,
-  backgroundColor: "#f5f5f5",
-  paddingHorizontal: 12,
-  paddingBottom: 12,
-  paddingTop: 28
-},
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    paddingTop: 28
+  },
+
   profileBox: {
     backgroundColor: "#350a50",
     padding: 18,
@@ -109,24 +177,56 @@ const styles = StyleSheet.create({
     borderColor: "#FFD700"
   },
 
-  name: {
+  title: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#FFD700"
   },
 
-  username: {
-    color: "#ddd",
-    marginTop: 3,
+  formBox: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 18,
+    elevation: 2
+  },
+
+  label: {
+    fontWeight: "bold",
+    marginBottom: 6,
+    marginTop: 10,
+    color: "#350a50"
+  },
+
+  input: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     fontSize: 13
   },
 
-  bio: {
-    color: "#fff",
-    textAlign: "center",
-    marginTop: 10,
-    lineHeight: 20,
-    fontSize: 13
+  bioInput: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    height: 90,
+    textAlignVertical: "top"
+  },
+
+  button: {
+    backgroundColor: "#350a50",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 20
+  },
+
+  buttonText: {
+    color: "#FFD700",
+    fontWeight: "bold"
   },
 
   statsContainer: {
@@ -140,21 +240,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 12,
     color: "#350a50"
-  },
-
-  quoteBox: {
-    backgroundColor: "#350a50",
-    padding: 16,
-    borderRadius: 16,
-    marginTop: 6,
-    marginBottom: 24
-  },
-
-  quote: {
-    color: "#FFD700",
-    textAlign: "center",
-    fontStyle: "italic",
-    lineHeight: 22,
-    fontSize: 13
   }
 });
