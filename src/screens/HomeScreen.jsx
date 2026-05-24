@@ -1,19 +1,40 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 import HeaderCard from "../components/HeaderCard";
 import InstrumentCard from "../components/InstrumentCard";
 import CategoryBadge from "../components/CategoryBadge";
-
-import { instruments } from "../data/instruments";
+import { api } from "../services/api";
 
 const HomeScreen = ({ navigation }) => {
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const categories = ["Dipukul", "Dipetik", "Ditiup", "Digesek", "Ditekan"];
 
-  const filteredData = instruments.filter((item) => {
+  const fetchInstruments = async () => {
+    try {
+      const result = await api.getInstruments();
+      setData(result);
+    } catch (error) {
+      console.error("Failed to load instruments on HomeScreen:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchInstruments();
+    }, [])
+  );
+
+  const filteredData = data.filter((item) => {
     const matchSearch = item.name
       .toLowerCase()
       .includes(searchText.toLowerCase());
@@ -33,8 +54,29 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5" }}>
+        <ActivityIndicator size="large" color="#350a50" />
+      </View>
+    );
+  }
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            setRefreshing(true);
+            fetchInstruments();
+          }}
+          colors={["#350a50"]}
+        />
+      }
+    >
       <HeaderCard searchText={searchText} setSearchText={setSearchText} />
 
       <Text style={styles.sectionTitle}>Kategori Populer</Text>

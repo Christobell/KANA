@@ -10,18 +10,17 @@ import {
 /*
   DetailScreen
   Fungsi:
-  - Menampilkan detail alat musik
+  - Menampilkan detail alat musik (Read-only)
 */
 
 const DetailScreen = ({ route }) => {
-
   const { item } = route.params;
 
   return (
     <ScrollView style={styles.container}>
 
       <Image
-        source={item.image}
+        source={typeof item.image === "string" ? { uri: item.image } : item.image}
         style={styles.image}
       />
 
@@ -40,10 +39,7 @@ const DetailScreen = ({ route }) => {
         </Text>
 
         <Text style={styles.description}>
-          {item.name} merupakan alat musik tradisional
-          Indonesia yang berasal dari {item.origin}.
-          Alat musik ini memiliki ciri khas unik dan
-          menjadi bagian penting dari budaya nusantara.
+          {item.description || `${item.name} merupakan alat musik tradisional Indonesia yang berasal dari ${item.origin}. Alat musik ini memiliki ciri khas unik dan menjadi bagian penting dari budaya nusantara.`}
         </Text>
 
       </View>

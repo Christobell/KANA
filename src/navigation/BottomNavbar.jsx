@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import HomeStack from "./HomeStack";
 import ExploreScreen from "../screens/ExploreScreen";
-import ProfileScreen from "../screens/ProfileScreen";
+import ProfileStack from "./ProfileStack";
 
 /*
   BottomNavbar
@@ -62,7 +62,7 @@ const BottomNavbar = () => {
 
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileStack}
       />
 
     </Tab.Navigator>

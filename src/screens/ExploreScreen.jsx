@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,29 +7,46 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
-  Alert
+  Alert,
+  ActivityIndicator,
+  RefreshControl
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 import CategoryBadge from "../components/CategoryBadge";
-import { instruments } from "../data/instruments";
-
-/*
-  ExploreScreen
-  Fungsi:
-  - Menampilkan eksplorasi alat musik nusantara
-  - Menerapkan TextInput untuk pencarian
-  - Menerapkan form usulan alat musik
-*/
+import { api } from "../services/api";
 
 const ExploreScreen = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [instrumentName, setInstrumentName] = useState("");
   const [origin, setOrigin] = useState("");
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const categories = ["Dipukul", "Dipetik", "Ditiup", "Digesek", "Ditekan"];
 
-  const filteredData = instruments.filter((item) => {
+  const fetchInstruments = async () => {
+    try {
+      const result = await api.getInstruments();
+      setData(result);
+    } catch (error) {
+      console.error("Failed to load instruments on ExploreScreen:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchInstruments();
+    }, [])
+  );
+
+  const filteredData = data.filter((item) => {
     const matchSearch = item.name
       .toLowerCase()
       .includes(searchText.toLowerCase());
@@ -47,10 +64,21 @@ const ExploreScreen = () => {
     );
   };
 
-  const handleSubmit = () => {
-    if (instrumentName === "" || origin === "") {
+  const handleSubmit = async () => {
+    if (instrumentName.trim() === "" || origin.trim() === "") {
       Alert.alert("Peringatan", "Nama alat musik dan asal daerah wajib diisi!");
-    } else {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await api.createInstrument({
+        name: instrumentName,
+        origin: origin,
+        category: selectedCategory || "Dipukul",
+        description: `${instrumentName} merupakan alat musik tradisional yang diusulkan oleh pengguna.`
+      });
+
       Alert.alert(
         "Berhasil",
         `Usulan ${instrumentName} dari ${origin} berhasil dikirim.`
@@ -58,11 +86,38 @@ const ExploreScreen = () => {
 
       setInstrumentName("");
       setOrigin("");
+      fetchInstruments(); // Segarkan data
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Gagal", "Gagal mengirimkan usulan.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5" }}>
+        <ActivityIndicator size="large" color="#350a50" />
+      </View>
+    );
+  }
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            setRefreshing(true);
+            fetchInstruments();
+          }}
+          colors={["#350a50"]}
+        />
+      }
+    >
 
       <View style={styles.heroBox}>
         <Text style={styles.heroLabel}>EXPLORE KANA</Text>
@@ -98,7 +153,7 @@ const ExploreScreen = () => {
       <View style={styles.grid}>
         {filteredData.map((item) => (
           <View key={item.id} style={styles.gridCard}>
-            <Image source={item.image} style={styles.gridImage} />
+            <Image source={typeof item.image === "string" ? { uri: item.image } : item.image} style={styles.gridImage} />
 
             <Text style={styles.name}>{item.name}</Text>
             <Text style={styles.origin}>{item.origin}</Text>
@@ -132,8 +187,16 @@ const ExploreScreen = () => {
           onChangeText={setOrigin}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Kirim Usulan</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSubmit}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator color="#FFD700" />
+          ) : (
+            <Text style={styles.buttonText}>Kirim Usulan</Text>
+          )}
         </TouchableOpacity>
       </View>
 

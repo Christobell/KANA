@@ -49,7 +49,7 @@ const InstrumentCard = ({ item, navigation }) => {
           }
         ]}
       >
-        <Image source={item.image} style={styles.image} />
+        <Image source={typeof item.image === "string" ? { uri: item.image } : item.image} style={styles.image} />
 
         <View style={styles.info}>
           <Text style={styles.name}>{item.name}</Text>
