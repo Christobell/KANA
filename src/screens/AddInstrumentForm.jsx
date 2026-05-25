@@ -9,17 +9,20 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator
+  ActivityIndicator,
+  Image
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { api } from "../services/api";
+import { supabase } from "../services/supabase";
 
 /*
   AddInstrumentForm
   Fungsi:
-  - Menyediakan form input untuk menambahkan instrumen baru
-  - Validasi form (Nama, Asal Daerah, Kategori wajib diisi)
-  - Pengiriman data ke MockAPI (CRUD: Create)
+  - Menyediakan form input untuk menambah (POST) & edit (PUT) instrumen baru
+  - Terintegrasi dengan Expo ImagePicker untuk memilih foto dari galeri
+  - Mengunggah foto secara langsung ke Supabase Storage (public bucket: Kana)
 */
 
 const AddInstrumentForm = ({ navigation, route }) => {
@@ -29,7 +32,7 @@ const AddInstrumentForm = ({ navigation, route }) => {
   const [origin, setOrigin] = useState(item ? item.origin : "");
   const [category, setCategory] = useState(item ? item.category : "");
   const [description, setDescription] = useState(item ? item.description : "");
-  const [imageUrl, setImageUrl] = useState(item ? item.image : "");
+  const [imageUri, setImageUri] = useState(item ? item.image : null);
   const [submitting, setSubmitting] = useState(false);
 
   const categories = ["Dipukul", "Dipetik", "Ditiup", "Digesek", "Ditekan"];
@@ -42,6 +45,67 @@ const AddInstrumentForm = ({ navigation, route }) => {
     }
   }, [navigation, item]);
 
+  // FUNGSI MEMILIH GAMBAR DARI GALERI
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Izin Ditolak", "Aplikasi memerlukan izin galeri untuk memilih foto.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images", // Menggunakan nilai string untuk menghindari warning deprecation
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  // FUNGSI UPLOAD GAMBAR KE SUPABASE STORAGE
+  const uploadImage = async (uri) => {
+    // Jika gambar sudah berupa URL remote (berasal dari http/https), tidak perlu upload ulang
+    if (uri.startsWith("http")) {
+      return uri;
+    }
+
+    try {
+      const fileExt = uri.split(".").pop() || "jpg";
+      const fileName = `${Date.now()}-${Math.floor(Math.random() * 1000)}.${fileExt}`;
+      const filePath = `instruments/${fileName}`;
+
+      // Di React Native, kita wajib menggunakan FormData untuk upload file ke Supabase Storage
+      const formData = new FormData();
+      formData.append("file", {
+        uri: uri,
+        name: fileName,
+        type: `image/${fileExt === "jpg" ? "jpeg" : fileExt}`
+      });
+
+      const { data, error } = await supabase.storage
+        .from("Kana")
+        .upload(filePath, formData, {
+          contentType: `image/${fileExt === "jpg" ? "jpeg" : fileExt}`
+        });
+
+      if (error) throw error;
+
+      // Ambil Public URL gambar yang berhasil diunggah
+      const { data: publicUrlData } = supabase.storage
+        .from("Kana")
+        .getPublicUrl(filePath);
+
+      return publicUrlData.publicUrl;
+    } catch (error) {
+      console.error("Error uploading image to Supabase Storage:", error);
+      throw new Error("Gagal mengunggah foto instrumen ke storage.");
+    }
+  };
+
+  // HANDLE SUBMIT (TAMBAH / UPDATE)
   const handleSubmit = async () => {
     if (!name.trim()) {
       Alert.alert("Validasi Gagal", "Nama alat musik wajib diisi!");
@@ -55,14 +119,21 @@ const AddInstrumentForm = ({ navigation, route }) => {
       Alert.alert("Validasi Gagal", "Silakan pilih salah satu kategori!");
       return;
     }
+    if (!imageUri) {
+      Alert.alert("Validasi Gagal", "Silakan pilih foto alat musik terlebih dahulu!");
+      return;
+    }
 
     setSubmitting(true);
     try {
+      // 1. Upload gambar jika pengguna memilih file lokal baru
+      const finalImageUrl = await uploadImage(imageUri);
+
       const payload = {
         name: name.trim(),
         origin: origin.trim(),
         category,
-        image: imageUrl.trim() || undefined,
+        image: finalImageUrl,
         description: description.trim()
       };
 
@@ -96,9 +167,9 @@ const AddInstrumentForm = ({ navigation, route }) => {
         );
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
       setSubmitting(false);
-      Alert.alert("Gagal", "Gagal menyimpan data ke server.");
+      Alert.alert("Gagal", e.message || "Gagal menyimpan data ke server.");
     }
   };
 
@@ -113,9 +184,12 @@ const AddInstrumentForm = ({ navigation, route }) => {
         <View style={styles.infoCard}>
           <Ionicons name="musical-notes" size={32} color="#FFD700" style={styles.infoIcon} />
           <View style={styles.infoTextContainer}>
-            <Text style={styles.infoTitle}>Bagikan Budaya Baru</Text>
+            <Text style={styles.infoTitle}>{item ? "Perbarui Koleksi" : "Bagikan Budaya Baru"}</Text>
             <Text style={styles.infoSubtitle}>
-              Masukkan informasi alat musik nusantara agar dapat dinikmati oleh pengguna lain.
+              {item 
+                ? "Sesuaikan detail informasi alat musik tradisional yang tersimpan di database."
+                : "Masukkan informasi alat musik nusantara agar dapat dinikmati oleh pengguna lain."
+              }
             </Text>
           </View>
         </View>
@@ -177,20 +251,24 @@ const AddInstrumentForm = ({ navigation, route }) => {
             })}
           </View>
 
-          {/* URL GAMBAR (OPSIONAL) */}
-          <Text style={styles.label}>URL Gambar (Opsional)</Text>
-          <View style={styles.inputContainer}>
-            <Ionicons name="image" size={20} color="#350a50" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="https://example.com/image.jpg"
-              placeholderTextColor="#aaa"
-              value={imageUrl}
-              onChangeText={setImageUrl}
-              autoCapitalize="none"
-              keyboardType="url"
-            />
-          </View>
+          {/* PILIH GAMBAR DARI GALERI (STORAGE UPLOAD) */}
+          <Text style={styles.label}>Foto Alat Musik *</Text>
+          <TouchableOpacity style={styles.imagePickerBox} onPress={pickImage} activeOpacity={0.8}>
+            {imageUri ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: imageUri }} style={styles.previewImage} />
+                <View style={styles.imageOverlay}>
+                  <Ionicons name="camera" size={16} color="#fff" />
+                  <Text style={styles.imageOverlayText}>Ubah Foto</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.imagePickerPlaceholder}>
+                <Ionicons name="camera-outline" size={32} color="#350a50" style={{ marginBottom: 6 }} />
+                <Text style={styles.imagePickerText}>Pilih Foto dari Galeri</Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
           {/* DESKRIPSI (OPSIONAL) */}
           <Text style={styles.label}>Deskripsi Singkat</Text>
@@ -338,6 +416,55 @@ const styles = StyleSheet.create({
   categoryTextSelected: {
     color: "#FFD700",
     fontWeight: "bold"
+  },
+  imagePickerBox: {
+    width: "100%",
+    height: 160,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    marginBottom: 8
+  },
+  imagePickerPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  imagePickerText: {
+    fontSize: 13,
+    color: "#555",
+    fontWeight: "600"
+  },
+  imagePreviewContainer: {
+    width: "100%",
+    height: "100%",
+    position: "relative"
+  },
+  previewImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover"
+  },
+  imageOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(53, 10, 80, 0.6)",
+    paddingVertical: 8,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  imageOverlayText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
+    marginLeft: 6
   },
   textAreaContainer: {
     alignItems: "flex-start",

@@ -16,55 +16,139 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import StatsCard from "../components/StatsCard";
 import { api } from "../services/api";
+import { supabase } from "../services/supabase";
 
 /*
   ProfileScreen
   Fungsi:
-  - Menampilkan profile pengguna
-  - Mengelola input form profile
-  - Menampilkan daftar koleksi instrumen dari MockAPI (CRUD: Read)
+  - Menampilkan profil pengguna dari Supabase public.profiles
+  - Mengedit informasi profil dan menyimpannya secara permanen ke Supabase
+  - Menampilkan koleksi instrumen pribadi dari database Supabase (CRUD: Read)
   - Fitur Edit & Delete instrumen langsung dari kartu koleksi
-  - Statistik dinamis (Koleksi, Kategori, Daerah)
+  - Statistik dinamis berdasarkan data aktual Supabase
 */
 
 const ProfileScreen = ({ navigation }) => {
-  // STATE INPUT PROFIL
-  const [profileName, setProfileName] = useState("Christobell Dillon");
-  const [username, setUsername] = useState("@nusantara.music");
-  const [bio, setBio] = useState(
-    "Pecinta alat musik tradisional Indonesia 🎶"
-  );
-  const [favorite, setFavorite] = useState("Angklung");
-
-  // STATE DATA API
+  // STATE DATA USER (SUPABASE profiles)
+  const [userId, setUserId] = useState(null);
+  const [profileName, setProfileName] = useState("");
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [favorite, setFavorite] = useState("");
+  
+  // STATE DATA INSTRUMEN & UTILITY
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
 
-  // FETCH DATA
-  const fetchInstruments = async () => {
+  // FETCH PROFILE & DATA DARI SUPABASE
+  const fetchProfileAndData = async () => {
     try {
+      // 1. Dapatkan user ID yang sedang aktif
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      if (user) {
+        setUserId(user.id);
+
+        // 2. Tarik data profil dari tabel public.profiles
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError && profileError.code !== "PGRST116") {
+          // PGRST116 adalah error "no rows returned" yang normal jika profil baru dibuat
+          throw profileError;
+        }
+
+        if (profile) {
+          setProfileName(profile.full_name || "");
+          setUsername(profile.username || "");
+          setBio(profile.bio || "");
+          setFavorite(profile.favorite_instrument || "");
+        } else {
+          // Fallback inisialisasi baris jika pendaftaran terlewat
+          const fallbackUsername = `@${user.email.split("@")[0]}`;
+          await supabase.from("profiles").insert([
+            {
+              id: user.id,
+              full_name: "Nama Pengguna",
+              username: fallbackUsername,
+              bio: "Pecinta musik nusantara 🎶",
+              favorite_instrument: ""
+            }
+          ]);
+          setProfileName("Nama Pengguna");
+          setUsername(fallbackUsername);
+          setBio("Pecinta musik nusantara 🎶");
+        }
+      }
+
+      // 3. Tarik data instrumen KANA dari Supabase
       const result = await api.getInstruments();
       setData(result);
     } catch (error) {
-      console.error("Failed to load instruments on ProfileScreen:", error);
+      console.error("Failed to load user profile or data:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setProfileLoading(false);
     }
   };
 
   useFocusEffect(
     useCallback(() => {
-      fetchInstruments();
+      fetchProfileAndData();
     }, [])
   );
 
-  // HANDLE SIMPAN PROFIL
-  const handleSaveProfile = () => {
+  // SIMPAN PERUBAHAN PROFIL KE SUPABASE
+  const handleSaveProfile = async () => {
+    if (!profileName.trim()) {
+      Alert.alert("Error", "Nama lengkap wajib diisi!");
+      return;
+    }
+
+    setProfileLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: profileName.trim(),
+          username: username.trim(),
+          bio: bio.trim(),
+          favorite_instrument: favorite.trim()
+        })
+        .eq("id", userId);
+
+      if (error) throw error;
+      Alert.alert("Berhasil", "Profil berhasil diperbarui 🎉");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Gagal", "Gagal memperbarui profil di database.");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // KELUAR SESI (LOGOUT)
+  const handleLogout = () => {
     Alert.alert(
-      "Berhasil",
-      "Profil berhasil diperbarui 🎉"
+      "Keluar Sesi",
+      "Apakah Anda yakin ingin keluar dari akun Anda?",
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Keluar",
+          style: "destructive",
+          onPress: async () => {
+            await supabase.auth.signOut();
+          }
+        }
+      ]
     );
   };
 
@@ -89,7 +173,7 @@ const ProfileScreen = ({ navigation }) => {
     try {
       await api.deleteInstrument(id);
       Alert.alert("Berhasil", "Alat musik berhasil dihapus.");
-      fetchInstruments();
+      fetchProfileAndData();
     } catch (error) {
       console.error(error);
       Alert.alert("Gagal", "Gagal menghapus alat musik.");
@@ -112,7 +196,7 @@ const ProfileScreen = ({ navigation }) => {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              fetchInstruments();
+              fetchProfileAndData();
             }}
             colors={["#350a50"]}
           />
@@ -126,11 +210,15 @@ const ProfileScreen = ({ navigation }) => {
             }}
             style={styles.avatar}
           />
-          <Text style={styles.title}>Edit Profil</Text>
+          <Text style={styles.title}>Akun Saya</Text>
         </View>
 
         {/* FORM PROFILE */}
         <View style={styles.formBox}>
+          {profileLoading && (
+            <ActivityIndicator size="small" color="#350a50" style={{ marginBottom: 10 }} />
+          )}
+
           <Text style={styles.label}>Nama Lengkap</Text>
           <TextInput
             style={styles.input}
@@ -164,8 +252,15 @@ const ProfileScreen = ({ navigation }) => {
             placeholder="Contoh: Angklung"
           />
 
-          <TouchableOpacity style={styles.button} onPress={handleSaveProfile}>
+          {/* SIMPAN BUTTON */}
+          <TouchableOpacity style={styles.button} onPress={handleSaveProfile} disabled={profileLoading}>
             <Text style={styles.buttonText}>Simpan Profil</Text>
+          </TouchableOpacity>
+
+          {/* LOGOUT BUTTON */}
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={18} color="#d9534f" style={{ marginRight: 6 }} />
+            <Text style={styles.logoutBtnText}>Keluar Akun</Text>
           </TouchableOpacity>
         </View>
 
@@ -328,6 +423,23 @@ const styles = StyleSheet.create({
 
   buttonText: {
     color: "#FFD700",
+    fontWeight: "bold"
+  },
+
+  logoutBtn: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#d9534f",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 12,
+    flexDirection: "row",
+    justifyContent: "center"
+  },
+
+  logoutBtnText: {
+    color: "#d9534f",
     fontWeight: "bold"
   },
 
